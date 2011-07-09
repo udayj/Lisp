@@ -1,0 +1,13 @@
+(defun square-tree(tree)
+  (cond ((nil? tree) nil)
+	((not (consp tree)) (* tree tree))
+	(t (cons (square-tree (car tree)) (square-tree (cdr tree))))))
+(defun subsets (s)
+  (if (nil? s) (list nil)
+	(let ((restList (subsets (cdr s))))
+	     (append restList (mapcar 
+			       #'(lambda (x) (cons (car s) x)) restList)))))
+(defun append1 (x y)
+  (append x y))
+(defun nil? (x)
+  (equalp nil x))

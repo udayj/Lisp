@@ -1,0 +1,6 @@
+(defun maximum(&rest input-list)
+  (let ((max 0))
+    (dolist (x input-list)
+      (format t "~a~%" x)
+      (if (> x max) (setf max x)))
+    (format t "Maximum:~a~%" max)))

@@ -1,0 +1,12 @@
+(defun accumulate (op initial seq)
+  (if (nil? seq)
+      initial
+      (funcall op (car seq) (accumulate op initial (cdr seq)))))
+(defun map_alt (p seq)
+  (accumulate (lambda (x y) (cons (funcall p x) y)) nil seq))
+(defun square (x)
+ (* x x))
+(defun append_alt (seq1 seq2)
+  (accumulate #'cons seq2 seq1))
+(defun length_alt (seq)
+  (accumulate (lambda (x y) (+ 1 y)) 0 seq))

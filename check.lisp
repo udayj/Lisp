@@ -1,0 +1,13 @@
+(defun hello-world()
+  (format t "hello-world"))
+(defun prompt-input()
+  (format *query-io* "Input Number:")
+  (force-output *query-io*)
+  (read-line *query-io*))
+(defun calc-time()
+  (setf seconds (parse-integer(prompt-input)))
+  (setf hours (truncate seconds 3600))
+  (setf min (truncate (- seconds (* hours 3600)) 60))
+  (setf sec (- seconds (+ (* hours 3600) (* min 60))))
+  (format t "~a:~a:~a~%" hours min sec ))
+  

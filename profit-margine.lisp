@@ -1,0 +1,8 @@
+(defun calc-profit-margin(selling-price cost-price)
+  (setf total-sp 0)
+  (setf total-cp 0)
+  (setf total-sp (apply '+ selling-price))
+  (setf total-cp (apply '+ cost-price))
+  (format t "~a    ~a~%" total-sp total-cp)
+  (setf margin (/ (- total-sp total-cp) (* 1.0 total-cp)))
+  (format t "~a~%" margin))

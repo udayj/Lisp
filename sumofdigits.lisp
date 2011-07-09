@@ -1,0 +1,7 @@
+(defun digi-sum(number)
+  (do ((num (truncate number 10) (truncate num 10))
+       (sum 0 (+ sum (mod num 10)))
+       (total 0)
+       (digit (mod number 10) (mod num 10))) 
+      ((= 0 num) (progn (if (and (not (= 0 digit)) (= 0 (mod number digit))) (incf total)) total))
+    (if (and (not (= 0 digit)) (= 0 (mod number digit))) (incf total))))
