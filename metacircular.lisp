@@ -12,7 +12,10 @@
 		     env))
     ((begin? exp)
      (eval-sequence (begin-actions exp) env))
-    ((cond? exp) (eval (cond->if exp) env))
+    ((cond? exp) (eval. (cond->if exp) env))
+    ((and? exp) (eval-and exp env))
+    ((or? exp) (eval-or exp env))
+    ((let? exp) (eval. (let->combination exp) env))
     ((application? exp)
      (apply (eval. (operator exp) env)
 	    (list-of-values (operands exp) env)))
@@ -155,6 +158,44 @@
 	    (make-if (cond-predicate first)
 		     (sequence->exp (cond-actions first))
 		     (expand-clauses rest))))))
+(defun and? (exp)
+  (tagged-list? exp 'and))
+(defun eval-and (exp env)
+  (if (null exp) 'true
+      (let ((first (first-exp exp))
+	    (rest (rest-exp exp)))
+	(if (true? (eval. first env))
+	    (eval-and rest env)
+	    'false))))
+(defun or? (exp)
+  (tagged-list? exp 'or))
+(defun eval-or (exp env)
+  (if (null exp) 'false
+      (let ((first (first-exp exp))
+	    (rest (rest-exp exp)))
+	(if (true? (eval. first env))
+	    'true
+	    (eval-or rest env)))))
+(defun let? (exp) (tagged-list? exp 'let))
+(defun let-body (exp) (cddr exp))
+(defun let-vars (exp)
+  (mapcar #'car (cadr exp)))
+(defun let-inits (exp)
+  (mapcar #'cadr (cadr exp)))
+
+(defun let->combination (exp)
+  (cons
+    (make-lambda (let-vars exp) (list (let-body exp)))
+    (let-inits exp)))
+(defun let*->nested-lets (exp)
+  (nested-lets (exp)))
+(defun nested-lets (exp)
+  (if (null (cadr exp))
+      (make-lambda nil (list (let-body exp)))
+      (cons
+       (make-lambda (car (let-vars exp))
+		    (nested-lets (list 'let (cdadr exp) (cddr exp))))
+       (car (let-inits exp)))))
 
 
 		    
