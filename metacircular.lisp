@@ -131,6 +131,31 @@
   (car ops))
 (defun rest-operands (ops)
   (cdr ops))
+(defun cond? (exp)
+  (tagged-list? exp 'cond))
+(defun cond-clauses (exp)
+  (cdr exp))
+(defun cond-else-clause? (clause)
+  (eq? (cond-predicate? clause) 'else))
+(defun cond-predicate (clause)
+  (car clause))
+(defun cond-actions (clause)
+  (cdr clause))
+(defun cond->if (exp)
+  (expand-clauses (cond-clauses exp)))
+(defun expand-clauses (clauses)
+  (if (null clauses)
+      'false
+      (let ((first (car clauses))
+	    (rest (cdr clauses)))
+	(if (cond-else-clause? first)
+	    (if (null rest)
+		(sequence->exp (cond-actions first))
+		(error "ELSE clause isn't last -- COND->IF " clauses))
+	    (make-if (cond-predicate first)
+		     (sequence->exp (cond-actions first))
+		     (expand-clauses rest))))))
+
 
 		    
 			    
