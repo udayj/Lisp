@@ -1,9 +1,10 @@
+(load "common-lisp")
 (defun eval. (exp env)
   (cond
     ((self-evaluating? exp) exp)
     ((variable? exp) (lookup-variable-value exp env))
     ((quoted? exp) (text-of-quotation exp))
-    ((assigbment? exp) (eval-assignment exp env))
+    ((assignment? exp) (eval-assignment exp env))
     ((definition? exp) (eval-definition exp env))
     ((if? exp) (eval-if exp env))
     ((lambda? exp)
@@ -67,7 +68,7 @@
   (cadr exp))
 (defun tagged-list? (exp tag)
   (if (consp exp)
-      (eq? (car exp) tag)
+      (eq (car exp) tag)
       nil))
 (defun assignment? (exp)
   (tagged-list? exp 'set!))
@@ -130,7 +131,7 @@
   (cdr exp))
 (defun no-operands? (ops)
   (null ops))
-(defun first-operands (ops)
+(defun first-operand (ops)
   (car ops))
 (defun rest-operands (ops)
   (cdr ops))
@@ -139,7 +140,7 @@
 (defun cond-clauses (exp)
   (cdr exp))
 (defun cond-else-clause? (clause)
-  (eq (cond-predicate? clause) 'else))
+  (eq (cond-predicate clause) 'else))
 (defun cond-predicate (clause)
   (car clause))
 (defun cond-actions (clause)
@@ -163,7 +164,7 @@
 (defun eval-and (exp env)
   (if (null exp) 'true
       (let ((first (first-exp exp))
-	    (rest (rest-exp exp)))
+	    (rest (rest-exps exp)))
 	(if (true? (eval. first env))
 	    (eval-and rest env)
 	    'false))))
@@ -172,7 +173,7 @@
 (defun eval-or (exp env)
   (if (null exp) 'false
       (let ((first (first-exp exp))
-	    (rest (rest-exp exp)))
+	    (rest (rest-exps exp)))
 	(if (true? (eval. first env))
 	    'true
 	    (eval-or rest env)))))
@@ -237,7 +238,7 @@
 	     (labels ((scan (vars vals)
 			(cond ((null vars)
 			       (env-loop (enclosing-environment env)))
-			      ((eq? var (car vars))
+			      ((eq var (car vars))
 			      (car vals))
 			      (t
 			       (scan (cdr vars) (cdr vals))))))
@@ -252,7 +253,7 @@
 	     (labels ((scan (vars vals)
 			(cond ((null vars)
 			       (env-loop (enclosing-environment env)))
-			      ((eq val (var vars))
+			      ((eq val (car vars))
 			       (rplaca vals val))
 			      (t (scan (cdr vars) (cdr vals))))))
 	       (if (eq env the-empty-environment)
@@ -271,8 +272,47 @@
 		     (t (scan (cdr vars) (cdr vals))))))
       (scan (frame-variables frame)
 	    (frame-values frame)))))
-	      
-
+(defun primitive-procedure? (proc)
+  (tagged-list? 'primitive proc))
+(defun primitive-implementation (proc)
+  (cadr proc))
+(deflex primitive-procedures
+  (list 
+    (list 'car #'car)
+    (list 'cdr #'cdr)
+    (list 'cadr #'cadr)
+    (list 'cddr #'cddr)
+    (list 'cons #'cons)
+    (list 'null? #'null)
+    (list 'assoc 'assoc)
+    (list '= #'=)
+    (list '> #'>)
+    (list '< #'<)
+    (list 'eq? #'eq)
+    (list '+ #'+)
+    (list '- #'-)
+    (list '* #'*)
+    (list '/ #'/)))
+(deflex primitive-procedure-names
+    (mapcar #'car primitive-procedures))
+(deflex primitive-procedures-objects
+    (mapcar (lambda (proc)
+	      (list 'primitive (cadr proc)))
+	    primitive-procedures))
+(defun apply-primitive-procedure (proc args)
+  (apply (primitive-implementation proc) args))
+(defun setup-env ()
+  (let ((initial-env
+	 (extend-environment
+	  primitive-procedure-names
+	  primitive-procedure-objects
+	  the-empty-environment)))
+    (define-variable! 'true t initial-env)
+    (define-variable! 'false nil initial-env)
+    initial-env))
+(defun the-global-environment (setup-env))
+(defun interpret (exp)
+  (eval. exp the-global-environment))
 
 
 		    
