@@ -1,4 +1,3 @@
-(load "common-lisp")
 (defun eval. (exp env)
   (cond
     ((self-evaluating? exp) exp)
@@ -219,7 +218,7 @@
   (cdr env))
 (defun first-frame (env)
   (car env))
-(deflex the-empty-environment '())
+(setf the-empty-environment '())
 (defun make-frame (variables values)
   (cons variables values))
 (defun frame-variables (frame)
@@ -245,8 +244,8 @@
 	       (if (eq env the-empty-environment)
 		   (error "Unbounded variable var" var)
 		   (let ((frame (first-frame env)))
-		     (scan (frame-variables first)
-			   (frame-values first)))))))
+		     (scan (frame-variables frame)
+			   (frame-values frame)))))))
     (env-loop env)))
 (defun set-variable-value! (var val env)
   (labels ((env-loop (env)
@@ -276,7 +275,7 @@
   (tagged-list? 'primitive proc))
 (defun primitive-implementation (proc)
   (cadr proc))
-(deflex primitive-procedures
+(setf primitive-procedures
   (list 
     (list 'car #'car)
     (list 'cdr #'cdr)
@@ -293,9 +292,9 @@
     (list '- #'-)
     (list '* #'*)
     (list '/ #'/)))
-(deflex primitive-procedure-names
+(setf primitive-procedure-names
     (mapcar #'car primitive-procedures))
-(deflex primitive-procedures-objects
+(setf primitive-procedure-objects
     (mapcar (lambda (proc)
 	      (list 'primitive (cadr proc)))
 	    primitive-procedures))
@@ -310,7 +309,7 @@
     (define-variable! 'true t initial-env)
     (define-variable! 'false nil initial-env)
     initial-env))
-(defun the-global-environment (setup-env))
+(setf the-global-environment (setup-env))
 (defun interpret (exp)
   (eval. exp the-global-environment))
 
