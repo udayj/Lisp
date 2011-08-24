@@ -17,7 +17,7 @@
     ((or? exp) (eval-or exp env))
     ((let? exp) (eval. (let->combination exp) env))
     ((application? exp)
-     (apply (eval. (operator exp) env)
+     (apply. (eval. (operator exp) env)
 	    (list-of-values (operands exp) env)))
     (t (error "unknown expression in EVAL: " exp))))
 (defun apply. (procedure arguments)
@@ -29,7 +29,9 @@
 	  (extend-environment (procedure-parameters procedure)
 			      arguments
 			      (procedure-environment procedure))))
-	(t (error "Unknown procedure type -- APPLY " procedure))))
+	(t
+	 (prin1 procedure)
+	 (error "Unknown procedure type -- APPLY " procedure))))
 (defun list-of-values (exps env)
   (if (no-operands? exps)
       nil
@@ -238,7 +240,9 @@
 			(cond ((null vars)
 			       (env-loop (enclosing-environment env)))
 			      ((eq var (car vars))
-			      (car vals))
+			       (if (eq (car vals) 'unassigned)
+				   (error "Unassigned variable" var)
+				   (car vals)))
 			      (t
 			       (scan (cdr vars) (cdr vals))))))
 	       (if (eq env the-empty-environment)
@@ -272,7 +276,7 @@
       (scan (frame-variables frame)
 	    (frame-values frame)))))
 (defun primitive-procedure? (proc)
-  (tagged-list? 'primitive proc))
+  (tagged-list? proc 'primitive))
 (defun primitive-implementation (proc)
   (cadr proc))
 (setf primitive-procedures
@@ -312,8 +316,28 @@
 (setf the-global-environment (setup-env))
 (defun interpret (exp)
   (eval. exp the-global-environment))
-
-
+(defun scan-out-defines (proc-body)
+  (let ((converted-proc (convert-defines proc-body nil nil nil)))
+    (let ((declarations (car converted-proc))
+	  (assignments (cadr converted-exps))
+	  (rem-exps (caddr converted-exps)))
+      (append (list 'let declarations) assignments rem-exps))))
+(defun convert-define (exps declarations assignments modified-exps)
+  (if (null exps)
+      (list declarations assignments modified-exps)
+      (if (definition? (car exps))
+	  (convert-defines
+	   (append declarations (list (list (definition-variable (car exps)) 'unassigned)))
+	   (append assignments (list (list 'set! (definition-variable (car exps)) (definition-value (car exps)))))
+	   modified-exps)
+	  (convert-defines
+	   declarations
+	   assignments
+	   (append modified-exps (car exps))))))
+(defun factorial (n)
+  (if (= n 0)
+      1
+      (* n (factorial (- n 1)))))
 		    
 			    
 			
