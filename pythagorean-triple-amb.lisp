@@ -1,0 +1,50 @@
+(defun get-counter ()
+  (let ((counter 1))
+    (lambda (x)
+      (cond ((eq x 'reset)
+	     (setf counter 1))
+	    ((eq x 'current) counter)
+	    (t
+	     (setf counter (+ counter 1)))))))
+(defun get-triple-gen ()
+  (let ((i (get-counter))
+	(j (get-counter))
+	(k (get-counter)))
+    (lambda ()
+      (let ((i1 (funcall i 'current))
+	    (j1 (funcall j 'current))
+	    (k1 (funcall k 'current)))
+      	(if (= i1 j1 k1) 
+	    (progn
+	      (setf i1 (funcall i 'reset))
+	      (setf j1 (funcall j 'reset))
+	      (setf k1 (funcall k 'next))
+	      (list i1 j1 k1))
+	    (if (= i1 j1)
+		  (progn
+		    (setf i1 (funcall i 'reset))
+		    (setf j1 (funcall j 'next))
+		    (list i1 j1 k1))
+		  (progn
+		    (setf i1 (funcall i 'next))
+		    (list i1 j1 k1))))))))
+	    
+(defun pythagorean-triples ()
+  (let ((get-next (get-triple-gen)))
+    (labels ((get-next-set ()
+      (let ((set (funcall get-next)))
+	(if (zeros set)
+	    'eof
+	    (let ((x (car set))
+		  (y (cadr set))
+		  (z (caddr set)))
+	      (if (= (* z z) (+ (* x x) (* y y)))
+		  (format t "~a ~a ~a ~%" (car set) (cadr set) (caddr set))
+		  (get-next-set)))))))
+      (lambda () (get-next-set)))))
+			  
+(defun zeros (set)
+  (if (null set) t
+      (if (not (= 0 (car set)))
+	  nil
+	  (zeros (cdr set)))))
