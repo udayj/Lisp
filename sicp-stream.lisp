@@ -18,6 +18,8 @@
   (car s))
 (defun stream-cdr (s)
   (force (cdr s)))
+(defun stream-cadr (s)
+	(stream-car (stream-cdr s)))
 (defun enumerate-interval (low high)
   (if (> low high)
       nil

@@ -683,6 +683,8 @@
 	 (analyze-sequence (begin-actions exp)))
 	((cond? exp)
 	 (analyze. (cond->if exp)))
+	((amb? exp)
+	 (analyze-amb exp))
 	((application? exp)
 	 (analyze-application exp))
 	(t
@@ -760,4 +762,9 @@
 	 (error "Unknown procedure type -- EXECUTE application ~a" proc))))
 (defun interpret-opt (exp)
   (eval-opt. exp  the-global-environment))
-	
+(defun amb? (exp)
+  (tagged-list? exp 'amb))
+(defun amb-choices (exp)
+  (cdr exp))
+(defun ambeval (exp env succeed fail)
+  ((analyze. exp) env succeed fail))
